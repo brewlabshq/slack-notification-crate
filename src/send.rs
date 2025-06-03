@@ -24,7 +24,7 @@ struct SlackMessageResponse {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct SlackApiResponse {
+pub struct SlackApiResponse {
     ok: bool,
     channel: String,
     ts: String,
@@ -33,7 +33,7 @@ struct SlackApiResponse {
 
 pub const SLACK_URL: &str = "https://slack.com/api/chat.postMessage";
 
-pub async fn send_message(channel_id: &str, text: &str) -> Result<(), Error> {
+pub async fn send_message(channel_id: &str, text: &str) -> Result<SlackApiResponse, Error> {
     let token = Config::get_config().slack_token;
 
     let client = Client::new();
@@ -67,12 +67,12 @@ pub async fn send_message(channel_id: &str, text: &str) -> Result<(), Error> {
     let data: SlackApiResponse = match res.json().await {
           Ok(response) => response,
           Err(err) => {
-            log::error!("Failedd to parse slack api response. Failed with error: {}", err);
+            log::error!("Failed to parse slack api response. Failed with error: {}", err);
             return Err(Error::msg("Failed to parse slack api response"))
           }
     };
 
     log::info!("Sent message to slack successfully. Response: {:#?}", data);
 
-    Ok(())
+    Ok(data)
 }
